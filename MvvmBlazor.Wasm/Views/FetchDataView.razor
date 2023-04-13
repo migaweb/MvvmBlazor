@@ -1,0 +1,69 @@
+﻿@page "/"
+@using MvvmBlazor.Wasm.ViewModels
+@implements IDisposable
+@inject IFetchDataViewModel _fetchDataViewModel
+
+<h1>Weather forecast</h1>
+<p>This component demonstrates fetching data from the server.</p>
+
+@{
+  if (_fetchDataViewModel.WeatherForecasts == null)
+  {
+    <p><em>Loading ...</em></p>
+  }
+  else
+  {
+      <button onclick="@(() => _fetchDataViewModel.AddSunnyForecast())">Add</button>
+      <button onclick="@(() => _fetchDataViewModel.RetrieveForecastsAsync())">Reset</button>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th></th>
+          <th>Temp. (C)</th>
+          <th>Temp. (F)</th>
+          <th>Summary</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var forecast in _fetchDataViewModel.WeatherForecasts)
+        {
+          <tr>
+            <td>@forecast.Id</td>
+            <td>@forecast.Date.ToShortDateString()</td>
+            <td>
+              <span class="oi oi-plus" 
+                    style="cursor:pointer"
+                    @onclick="() => IncreaseTemperatureClick(forecast.Id)"></span>
+            </td>
+            <td>@forecast.TemperatureC </td>
+            <td>@forecast.TemperatureF</td>
+            <td>@forecast.Summary</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+}
+
+@functions {
+
+
+  protected override async Task OnInitializedAsync()
+  {
+    await _fetchDataViewModel.RetrieveForecastsAsync();
+    _fetchDataViewModel.OnViewModelUpdate += (o, e) => StateHasChanged();
+  }
+
+  private void IncreaseTemperatureClick(int weatherForecastId)
+  {
+    _fetchDataViewModel.IncreaseTemperature(weatherForecastId); 
+  }
+
+  void IDisposable.Dispose()
+  {
+    _fetchDataViewModel.OnViewModelUpdate -= (o, e) => StateHasChanged();
+  }
+}
